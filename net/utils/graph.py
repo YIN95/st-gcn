@@ -70,6 +70,24 @@ class Graph():
             neighbor_link = [(i - 1, j - 1) for (i, j) in neighbor_1base]
             self.edge = self_link + neighbor_link
             self.center = 2
+        elif layout == 'tp-imu':
+            self.num_node = 13
+            self_link = [(i, i) for i in range(self.num_node)]
+            neighbor_link = [(6, 4), (4, 1), (5, 3), (3, 1), (12, 10),
+                             (10, 8), (8, 2), (11, 9), (9, 7), (7, 2),
+                             (2, 1), (1, 0)]
+            self.edge = self_link + neighbor_link
+            self.center = 2
+        elif layout == 'tp-vicon':
+            self.num_node = 21
+            self_link = [(i, i) for i in range(self.num_node)]
+            neighbor_link = [(10, 9), (9, 8), (8, 7), (7, 4),
+                             (14, 13), (13, 12), (12, 11), (11, 4),
+                             (17, 16), (16, 15), (15, 0),
+                             (20, 19), (19, 18), (18, 0),
+                             (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
+            self.edge = self_link + neighbor_link
+            self.center = 2
         # elif layout=='customer settings'
         #     pass
         else:

@@ -17,6 +17,9 @@ from torchlight import DictAction
 from torchlight import import_class
 
 from .processor import Processor
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -32,6 +35,7 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
 
+
 class REC_Processor(Processor):
     """
         Processor for Skeleton-based Action Recgnition
@@ -42,7 +46,7 @@ class REC_Processor(Processor):
                                         **(self.arg.model_args))
         self.model.apply(weights_init)
         self.loss = nn.CrossEntropyLoss()
-        
+
     def load_optimizer(self):
         if self.arg.optimizer == 'SGD':
             self.optimizer = optim.SGD(
@@ -62,7 +66,7 @@ class REC_Processor(Processor):
     def adjust_lr(self):
         if self.arg.optimizer == 'SGD' and self.arg.step:
             lr = self.arg.base_lr * (
-                0.1**np.sum(self.meta_info['epoch']>= np.array(self.arg.step)))
+                0.1**np.sum(self.meta_info['epoch'] >= np.array(self.arg.step)))
             for param_group in self.optimizer.param_groups:
                 param_group['lr'] = lr
             self.lr = lr
@@ -80,6 +84,8 @@ class REC_Processor(Processor):
         self.adjust_lr()
         loader = self.data_loader['train']
         loss_value = []
+        result_frag = []
+        label_frag = []
 
         for data, label in loader:
 
@@ -89,8 +95,13 @@ class REC_Processor(Processor):
 
             # forward
             output = self.model(data)
-            loss = self.loss(output, label)
+            result_frag.extend(
+                output.data.cpu().numpy().argmax(axis=1))
+            label_frag.extend(label.data.cpu().numpy())
 
+            # print(output)
+            loss = self.loss(output, label)
+            # print(label)
             # backward
             self.optimizer.zero_grad()
             loss.backward()
@@ -103,9 +114,14 @@ class REC_Processor(Processor):
             self.show_iter_info()
             self.meta_info['iter'] += 1
 
-        self.epoch_info['mean_loss']= np.mean(loss_value)
+        ac = accuracy_score(label_frag, result_frag)
+        # print(result_frag)
+        # print(label_frag)
+        print("train acc: {}".format(ac))
+
+        self.epoch_info['mean_loss'] = np.mean(loss_value)
         self.show_epoch_info()
-        self.io.print_timer()
+        # self.io.print_timer()
 
     def test(self, evaluation=True):
 
@@ -116,7 +132,7 @@ class REC_Processor(Processor):
         label_frag = []
 
         for data, label in loader:
-            
+
             # get data
             data = data.float().to(self.dev)
             label = label.long().to(self.dev)
@@ -133,14 +149,20 @@ class REC_Processor(Processor):
                 label_frag.append(label.data.cpu().numpy())
 
         self.result = np.concatenate(result_frag)
+        # print(self.result)
         if evaluation:
             self.label = np.concatenate(label_frag)
-            self.epoch_info['mean_loss']= np.mean(loss_value)
+            self.epoch_info['mean_loss'] = np.mean(loss_value)
             self.show_epoch_info()
 
             # show top-k accuracy
             for k in self.arg.show_topk:
                 self.show_topk(k)
+            top = self.result.argmax(axis=1)
+            print(top)
+            print(self.label)
+            cm = confusion_matrix(self.label, top)
+            print(cm)
 
     @staticmethod
     def get_parser(add_help=False):
@@ -154,13 +176,19 @@ class REC_Processor(Processor):
 
         # region arguments yapf: disable
         # evaluation
-        parser.add_argument('--show_topk', type=int, default=[1, 5], nargs='+', help='which Top K accuracy will be shown')
+        parser.add_argument('--show_topk', type=int,
+                            default=[1], nargs='+', help='which Top K accuracy will be shown')
         # optim
-        parser.add_argument('--base_lr', type=float, default=0.01, help='initial learning rate')
-        parser.add_argument('--step', type=int, default=[], nargs='+', help='the epoch where optimizer reduce the learning rate')
-        parser.add_argument('--optimizer', default='SGD', help='type of optimizer')
-        parser.add_argument('--nesterov', type=str2bool, default=True, help='use nesterov or not')
-        parser.add_argument('--weight_decay', type=float, default=0.0001, help='weight decay for optimizer')
+        parser.add_argument('--base_lr', type=float,
+                            default=0.01, help='initial learning rate')
+        parser.add_argument('--step', type=int, default=[], nargs='+',
+                            help='the epoch where optimizer reduce the learning rate')
+        parser.add_argument('--optimizer', default='SGD',
+                            help='type of optimizer')
+        parser.add_argument('--nesterov', type=str2bool,
+                            default=True, help='use nesterov or not')
+        parser.add_argument('--weight_decay', type=float,
+                            default=0.0001, help='weight decay for optimizer')
         # endregion yapf: enable
 
         return parser

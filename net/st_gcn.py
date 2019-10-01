@@ -64,7 +64,12 @@ class Model(nn.Module):
             self.edge_importance = [1] * len(self.st_gcn_networks)
 
         # fcn for prediction
-        self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
+        hidden1 = 64
+        hidden2 = 16
+        # self.dp = nn.Dropout(0.5, inplace=True)
+        self.fcn = nn.Conv2d(256, hidden1, kernel_size=1)
+        self.fc1 = nn.Linear(hidden1, hidden2)
+        self.fc2 = nn.Linear(hidden2, num_class)
 
     def forward(self, x):
 
@@ -87,8 +92,13 @@ class Model(nn.Module):
 
         # prediction
         x = self.fcn(x)
+        # print(x)
+        # print(x.size(0))
         x = x.view(x.size(0), -1)
-
+        x = self.fc1(x)
+        # x = self.dp(x)
+        x = self.fc2(x)
+        # print(x)
         return x
 
     def extract_feature(self, x):
