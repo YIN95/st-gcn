@@ -64,12 +64,12 @@ class Model(nn.Module):
             self.edge_importance = [1] * len(self.st_gcn_networks)
 
         # fcn for prediction
-        hidden1 = 64
-        hidden2 = 16
+        hidden = 64
+        outfeature = 16
+        
         # self.dp = nn.Dropout(0.5, inplace=True)
-        self.fcn = nn.Conv2d(256, hidden1, kernel_size=1)
-        self.fc1 = nn.Linear(hidden1, hidden2)
-        self.fc2 = nn.Linear(hidden2, num_class)
+        self.fcn = nn.Conv2d(256, hidden, kernel_size=1)
+        self.fc1 = nn.Linear(hidden, outfeature)
 
     def forward(self, x):
 
@@ -97,7 +97,7 @@ class Model(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
         # x = self.dp(x)
-        x = self.fc2(x)
+        # x = self.fc2(x)
         # print(x)
         return x
 

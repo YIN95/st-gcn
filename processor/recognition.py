@@ -46,6 +46,7 @@ class REC_Processor(Processor):
                                         **(self.arg.model_args))
         self.model.apply(weights_init)
         self.loss = nn.CrossEntropyLoss()
+        # self.loss = nn.BCEWithLogitsLoss()
 
     def load_optimizer(self):
         if self.arg.optimizer == 'SGD':

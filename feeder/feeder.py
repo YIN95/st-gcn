@@ -51,9 +51,10 @@ class Feeder(torch.utils.data.Dataset):
         # data: N C V T M
 
         # load label
-        with open(self.label_path, 'rb') as f:
-            self.label = pickle.load(f)
-
+        # with open(self.label_path, 'rb') as f:
+        #     self.label = pickle.load(f)
+        self.label = np.load(self.label_path)
+        
         # load data
         if mmap:
             self.data = np.load(self.data_path, mmap_mode='r')
@@ -65,10 +66,8 @@ class Feeder(torch.utils.data.Dataset):
             self.data = self.data[0:100]
             self.sample_name = self.sample_name[0:100]
 
-        self.data = self.data[:, :, :, :, 0]
-        self.N, self.C, self.T, self.V = self.data.shape
-        self.data = self.data.reshape((self.N, self.C, self.T, self.V, 1))
         self.N, self.C, self.T, self.V, self.M = self.data.shape
+        self.M = 1
 
     def __len__(self):
         return len(self.label)

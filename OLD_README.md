@@ -174,6 +174,8 @@ To train a new ST-GCN model, run
 
 ```
 python main.py recognition -c config/st_gcn/<dataset>/train.yaml [--work_dir <work folder>]
+python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train.yaml
+
 ```
 where the ```<dataset>``` must be ```ntu-xsub```, ```ntu-xview``` or ```kinetics-skeleton```, depending on the dataset you want to use.
 The training results, including **model weights**, configurations and logging files, will be saved under the ```./work_dir``` by default or ```<work folder>``` if you appoint it.

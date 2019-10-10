@@ -1,0 +1,32 @@
+work_dir: ./work_dir/recognition/congreg8-marker/ST_GCN
+
+# feeder
+feeder: feeder.feeder.Feeder
+train_feeder_args:
+  data_path: ./data/CongreG8/marker/train_data.npy
+  label_path: ./data/CongreG8/marker/train_label.pkl
+test_feeder_args:
+  data_path: ./data/CongreG8/marker/val_data.npy
+  label_path: ./data/CongreG8/marker/val_label.pkl
+
+# model
+model: net.st_gcn.Model
+model_args:
+  in_channels: 3
+  num_class: 2
+  dropout: 0.5
+  edge_importance_weighting: True
+  graph_args:
+    layout: 'congreg8-marker'
+    strategy: 'spatial'
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [10, 50]
+
+# training
+device: [0,1]
+batch_size: 32
+test_batch_size: 32
+num_epoch: 80

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Graph():
     """ The Graph to model the skeletons extracted by the openpose
 
@@ -88,6 +89,22 @@ class Graph():
                              (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)]
             self.edge = self_link + neighbor_link
             self.center = 2
+        elif layout == 'congreg8-marker':
+            self.num_node = 37
+            self_link = [(i, i) for i in range(self.num_node)]
+            neighbor_1base = [(37, 36), (36, 34), (34, 35),
+                              (35, 32), (32, 33), (33, 4),
+                              (31, 30), (30, 28), (28, 29),
+                              (29, 26), (26, 27), (27, 3),
+                              (4, 2), (2, 8), (8, 6), (3, 1), (1, 7), (7, 6),
+                              (6, 5), (5, 10), (10, 11), (11, 9),
+                              (25, 23), (23, 24), (24, 21), (21, 22),
+                              (22, 20), (20, 19), (19, 5),
+                              (18, 16), (16, 17), (17, 14), (14, 15),
+                              (15, 13), (13, 12), (12, 5)]
+            neighbor_link = [(i - 1, j - 1) for (i, j) in neighbor_1base]
+            self.edge = self_link + neighbor_link
+            self.center = 5
         # elif layout=='customer settings'
         #     pass
         else:
