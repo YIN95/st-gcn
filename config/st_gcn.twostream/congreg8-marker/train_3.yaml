@@ -1,0 +1,35 @@
+work_dir: ./work_dir/recognition/congreg8-markers/ST_GCN_TWO_STREAM_3
+
+# feeder
+feeder: feeder.feeder.Feeder
+train_feeder_args:
+  data_path: ./data/CongreG8/marker/60/train_data_3.npy
+  label_path: ./data/CongreG8/marker/60/train_label_3.npy
+test_feeder_args:
+  data_path: ./data/CongreG8/marker/60/val_data_3.npy
+  label_path: ./data/CongreG8/marker/60/val_label_3.npy
+
+# model
+model: net.st_gcn_twostream.Model
+model_args:
+  in_channels: 3
+  num_class: 2
+  dropout: 0.5
+  edge_importance_weighting: True
+  graph_args:
+    layout: 'congreg8-marker'
+    strategy: 'spatial'
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [10, 50]
+
+# training
+device: [0,1,2,3]
+batch_size: 32
+test_batch_size: 32
+num_epoch: 80
+
+
+
