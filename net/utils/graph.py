@@ -105,6 +105,12 @@ class Graph():
             neighbor_link = [(i - 1, j - 1) for (i, j) in neighbor_1base]
             self.edge = self_link + neighbor_link
             self.center = 5
+        elif layout == 'group':
+            self.num_node = 4
+            self_link = [(i, i) for i in range(self.num_node)]
+            neighbor_link = [(1, 0), (2, 0), (3, 0)]
+            self.edge = self_link + neighbor_link
+            self.center = 0
         # elif layout=='customer settings'
         #     pass
         else:
