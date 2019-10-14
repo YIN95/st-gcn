@@ -31,6 +31,9 @@ class Model(nn.Module):
         super().__init__()
 
         # load graph
+        in_channels = 16
+        num_class = 2
+        graph_args = {'layout': 'group', 'strategy': 'spatial'}
         self.graph = Graph(**graph_args)
         A = torch.tensor(self.graph.A, dtype=torch.float32, requires_grad=False)
         self.register_buffer('A', A)
@@ -44,9 +47,9 @@ class Model(nn.Module):
         self.st_gcn_networks = nn.ModuleList((
             st_gcn(in_channels, 64, kernel_size, 1, residual=False, **kwargs0),
             st_gcn(64, 64, kernel_size, 1, **kwargs),
-            st_gcn(64, 64, kernel_size, 1, **kwargs),
-            st_gcn(64, 128, kernel_size, 2, **kwargs),
-            st_gcn(128, 128, kernel_size, 1, **kwargs),
+            # st_gcn(64, 64, kernel_size, 1, **kwargs),
+            # st_gcn(64, 128, kernel_size, 2, **kwargs),
+            # st_gcn(128, 128, kernel_size, 1, **kwargs),
         ))
 
         # initialize parameters for edge importance weighting
@@ -59,12 +62,12 @@ class Model(nn.Module):
             self.edge_importance = [1] * len(self.st_gcn_networks)
 
         # fcn for prediction
-        hidden = 64
-        outfeature = 16
-        
+        hidden = 8
+        outfeature = 2
+
         # self.dp = nn.Dropout(0.5, inplace=True)
-        self.fcn = nn.Conv2d(256, hidden, kernel_size=1)
-        self.fc1 = nn.Linear(hidden, outfeature)
+        self.fcn = nn.Conv2d(64, hidden, kernel_size=1)
+        self.fc1 = nn.Linear(hidden, 2)
 
     def forward(self, x):
 
@@ -113,6 +116,19 @@ class st_gcn(nn.Module):
 
         self.gcn = ConvTemporalGraphical(in_channels, out_channels,
                                          kernel_size[1])
+        self.tcn = nn.Sequential(
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(
+                out_channels,
+                out_channels,
+                (kernel_size[0], 1),
+                (stride, 1),
+                padding,
+            ),
+            nn.BatchNorm2d(out_channels),
+            nn.Dropout(dropout, inplace=True),
+        )
 
         if not residual:
             self.residual = lambda x: 0
@@ -135,5 +151,7 @@ class st_gcn(nn.Module):
     def forward(self, x, A):
 
         res = self.residual(x)
-        x, A = self.gcn(x, A)
+        x, A = self.gcn(x, A) 
+        x = self.tcn(x) + res
+    
         return self.relu(x), A

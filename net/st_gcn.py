@@ -31,6 +31,8 @@ class Model(nn.Module):
         super().__init__()
 
         # load graph
+        # print('--------')
+        # print(graph_args)
         self.graph = Graph(**graph_args)
         A = torch.tensor(self.graph.A, dtype=torch.float32, requires_grad=False)
         self.register_buffer('A', A)
@@ -124,6 +126,7 @@ class Model(nn.Module):
         output = x.view(N, M, -1, t, v).permute(0, 2, 3, 4, 1)
 
         return output, feature
+
 
 class st_gcn(nn.Module):
     r"""Applies a spatial temporal graph convolution over an input graph sequence.

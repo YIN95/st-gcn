@@ -42,7 +42,7 @@ class REC_Processor(Processor):
     """
 
     def load_model(self):
-        print("load model")
+        # print("load model")
         self.model = self.io.load_model(self.arg.model,
                                         **(self.arg.model_args))
         self.model.apply(weights_init)
@@ -88,7 +88,7 @@ class REC_Processor(Processor):
         loss_value = []
         result_frag = []
         label_frag = []
-        print("train")
+        # print("train")
         for data, label in loader:
 
             # get data
