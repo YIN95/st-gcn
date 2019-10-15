@@ -11,4 +11,4 @@ nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/trai
 
 python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_4.yaml
 
-nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_1.yaml > nohup_group1.out
+nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_3.yaml > nohup_group3.out
