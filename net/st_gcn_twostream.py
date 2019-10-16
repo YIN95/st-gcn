@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+# import torch.utils.data as data_utils
 import dgl
 import networkx as nx
 from torch.autograd import Variable
@@ -12,6 +13,7 @@ from .st_gcn import Model as ST_GCN
 from .group_gcn import Model as GCN
 from net.utils.gat import GAT
 import numpy as np
+import scipy.spatial.distance as distance 
 
 
 def make_mlp(dim_list, activation='relu', batch_norm=True, dropout=0):
@@ -58,9 +60,33 @@ class Model(nn.Module):
 
         jointInput = x[:, :, :, :, 0]
         N, C, T, V = jointInput.shape
+        # print(jointInput[:, :, -1:, 5])
+        # print(jointInput[:, :, -1:, 5].shape)
+        joinChest = jointInput[:, :, -1:, 5].data.cpu().numpy().reshape(batch, 3)
+
         jointInput = jointInput.reshape((N, C, T, V, 1))
         groupInputs = x[:, :, :, :, 1:]
 
+        groupChest1 = groupInputs[:, :, -1:, 5, 0].data.cpu().numpy().reshape(batch, 3)
+        groupChest2 = groupInputs[:, :, -1:, 5, 1].data.cpu().numpy().reshape(batch, 3)
+        groupChest3 = groupInputs[:, :, -1:, 5, 2].data.cpu().numpy().reshape(batch, 3)
+
+        dis1 = np.array([joinChest, groupChest1])
+        dis2 = np.array([joinChest, groupChest2])
+        dis3 = np.array([joinChest, groupChest3])
+        # print(dis1.shape)
+        dist1 = []
+        dist2 = []
+        dist3 = []
+        for b in range(batch):
+            dist1.append(1.0/distance.pdist(dis1[:, b, :]))
+            dist2.append(1.0/distance.pdist(dis2[:, b, :]))
+            dist3.append(1.0/distance.pdist(dis3[:, b, :]))
+
+        # print(dist1)
+        # dist1 = distance.pdist(points)
+        dist = [dist1, dist2, dist3]
+        # print(dist)
         joinBodyOutput = self.join_stream(jointInput)
         allBodyOutputs = []
         allBodyOutputs.append(joinBodyOutput)
@@ -73,15 +99,28 @@ class Model(nn.Module):
             allBodyOutputs.append(groupBodyOutput)
 
         allGroupData = torch.stack(allBodyOutputs, dim=2)
+        device = torch.device(allGroupData.device)
+        dist1 = torch.tensor(dist1, dtype=torch.float32).to(device=device)
+        dist2 = torch.tensor(dist2, dtype=torch.float32).to(device=device)
+        dist3 = torch.tensor(dist3, dtype=torch.float32).to(device=device)
+
+        # dist1 = dist1
+        # dist2 = dist2
+        # dist3 = dist3
+        for i in range(batch):
+            allGroupData[i, 0, :] = allGroupData[i, 0, :]*dist1[i].data
+            allGroupData[i, 1, :] = allGroupData[i, 1, :]*dist2[i].data
+            allGroupData[i, 2, :] = allGroupData[i, 2, :]*dist3[i].data
+
         allGroupData = allGroupData.permute(0, 2, 1).contiguous()
         # print(allGroupData.shape)
         # device = torch.device(allGroupData.device)
 
         allGroupData = allGroupData.reshape((N, 16, 1, 4, 1))
-        out = self.gcn(allGroupData)
+        out = self.gcn(allGroupData, dist)
         # print(out)
 
-        # print(out.shape)
+        # print(out.shapeFloatTensor
         # self.adj = self.adj.to(device=device)
         # self.out = self.gro
         # out = np.array(out)

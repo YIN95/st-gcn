@@ -60,7 +60,10 @@ class Model(nn.Module):
             ])
         else:
             self.edge_importance = [1] * len(self.st_gcn_networks)
-
+        # print(edge_importance_weighting)
+        # print(self.edge_importance[0])
+        # print(self.edge_importance.shape)
+        # print('---')
         # fcn for prediction
         hidden = 8
         outfeature = 2
@@ -69,7 +72,7 @@ class Model(nn.Module):
         self.fcn = nn.Conv2d(64, hidden, kernel_size=1)
         self.fc1 = nn.Linear(hidden, 2)
 
-    def forward(self, x):
+    def forward(self, x, dist):
 
         # data normalization
         N, C, T, V, M = x.size()
@@ -82,7 +85,10 @@ class Model(nn.Module):
 
         # forwad
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance)
+            # importance = nn.Parameter(torch.ones(self.A.size()))
+            # importance = importance.to
+            x, _ = gcn(x, self.A*importance)
+            # print(importance)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
@@ -149,9 +155,9 @@ class st_gcn(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x, A):
-
+        # A = A*edge
         res = self.residual(x)
-        x, A = self.gcn(x, A) 
+        x, A = self.gcn(x, A)
         x = self.tcn(x) + res
-    
+
         return self.relu(x), A

@@ -9,6 +9,7 @@ nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/trai
 
 nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_4.yaml > nohup4.out
 
-python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_4.yaml
+python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_test.yaml
+python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_0.yaml
 
 nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_3.yaml > nohup_group3.out
