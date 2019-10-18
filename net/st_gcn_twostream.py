@@ -37,20 +37,10 @@ class Model(nn.Module):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        # print(**kwargs)
-        # print("===")
         self.join_stream = ST_GCN(*args, **kwargs)
         self.group_stream = ST_GCN(*args, **kwargs)
         self.gcn = GCN(*args, **kwargs)
-        # self.gcn = GCN(16, 2, self.graph_args, True )
-        # self.gat = GAT(16, 8, nclass=2, dropout=0.5, nheads=2, alpha=0.2)
-        # self.adj = np.array([[1, 1, 1, 1],
-        #                      [1, 1, 0, 0],
-        #                      [1, 0, 1, 0],
-        #                      [1, 0, 0, 1]])
-        # self.adj = Variable(torch.tensor(self.adj))
 
-        # self.mlp3 = make_mlp([4*4, 2], activation='softmax')
 
     def forward(self, x):
         batch = x.shape[0]
@@ -74,17 +64,8 @@ class Model(nn.Module):
 
         allGroupData = torch.stack(allBodyOutputs, dim=2)
         allGroupData = allGroupData.permute(0, 2, 1).contiguous()
-        # print(allGroupData.shape)
-        # device = torch.device(allGroupData.device)
 
         allGroupData = allGroupData.reshape((N, 16, 1, 4, 1))
         out = self.gcn(allGroupData)
-        # print(out)
-
-        # print(out.shape)
-        # self.adj = self.adj.to(device=device)
-        # self.out = self.gro
-        # out = np.array(out)
-        # print(out)
 
         return out

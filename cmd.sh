@@ -3,7 +3,7 @@
 nvidia-docker run --shm-size=1g --rm -it -u $(id -u):$(id -g) \
 --mount type=bind,source=/Midgard/home/wyin/.local,target=/.local \
 --mount type=bind,source=/Midgard/home/wyin/,target=/wyin \
---mount type=bind,source=/Midgard/home/wyin/repo/st-gcn/,target=/st-gcn \
+--mount type=bind,source=/Midgard/home/wyin/repo/st-gcn/,target=/workspace \
 nvcr.io/nvidia/wyin_pytorch:19.01
 
 # srun --gres=gpu:4 run-docker --cinstrain=belegost --shm-size=32g \

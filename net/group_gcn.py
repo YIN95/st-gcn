@@ -151,7 +151,7 @@ class st_gcn(nn.Module):
     def forward(self, x, A):
 
         res = self.residual(x)
-        x, A = self.gcn(x, A) 
+        x, A = self.gcn(x, A)
         x = self.tcn(x) + res
-    
+
         return self.relu(x), A

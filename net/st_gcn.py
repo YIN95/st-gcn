@@ -6,6 +6,7 @@ from torch.autograd import Variable
 from net.utils.tgcn import ConvTemporalGraphical
 from net.utils.graph import Graph
 
+
 class Model(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
@@ -43,17 +44,18 @@ class Model(nn.Module):
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels * A.size(1))
         kwargs0 = {k: v for k, v in kwargs.items() if k != 'dropout'}
+
         self.st_gcn_networks = nn.ModuleList((
             st_gcn(in_channels, 64, kernel_size, 1, residual=False, **kwargs0),
             st_gcn(64, 64, kernel_size, 1, **kwargs),
             st_gcn(64, 64, kernel_size, 1, **kwargs),
-            st_gcn(64, 64, kernel_size, 1, **kwargs),
+            st_gcn(64, 64, kernel_size, 1, stage=True, **kwargs),
             st_gcn(64, 128, kernel_size, 2, **kwargs),
             st_gcn(128, 128, kernel_size, 1, **kwargs),
-            st_gcn(128, 128, kernel_size, 1, **kwargs),
+            st_gcn(128, 128, kernel_size, 1, stage=True, **kwargs),
             st_gcn(128, 256, kernel_size, 2, **kwargs),
             st_gcn(256, 256, kernel_size, 1, **kwargs),
-            st_gcn(256, 256, kernel_size, 1, **kwargs),
+            st_gcn(256, 256, kernel_size, 1, stage=True, **kwargs),
         ))
 
         # initialize parameters for edge importance weighting
@@ -68,9 +70,9 @@ class Model(nn.Module):
         # fcn for prediction
         hidden = 64
         outfeature = 16
-        
+
         # self.dp = nn.Dropout(0.5, inplace=True)
-        self.fcn = nn.Conv2d(256, hidden, kernel_size=1)
+        self.fcn = nn.Conv2d(448, hidden, kernel_size=1)
         self.fc1 = nn.Linear(hidden, outfeature)
 
     def forward(self, x):
@@ -84,23 +86,32 @@ class Model(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-        # forwad
+        outputs = None
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x, _ = gcn(x, self.A * importance)
+            if gcn.stage:
+                out = F.avg_pool2d(x, x.size()[2:])
+                out = out.view(N, M, -1, 1, 1).mean(dim=1)
+                if outputs is None:
+                    outputs = out
+                else:
+                    outputs = torch.cat((outputs, out), dim=1)
 
-        # global pooling
-        x = F.avg_pool2d(x, x.size()[2:])
-        x = x.view(N, M, -1, 1, 1).mean(dim=1)
 
+
+        # x = F.avg_pool2d(x, x.size()[2:])
+        # print(x.shape)
+        # print('--')
+        # x = x.view(N, M, -1, 1, 1).mean(dim=1)
+        # print(x.shape)
+        # print('---')
         # prediction
-        x = self.fcn(x)
-        # print(x)
-        # print(x.size(0))
+        # print(outputs.shape)
+        x = self.fcn(outputs)
+        # print('----')
+        # print(x.shape)
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
-        # x = self.dp(x)
-        # x = self.fc2(x)
-        # print(x)
         return x
 
     def extract_feature(self, x):
@@ -159,13 +170,14 @@ class st_gcn(nn.Module):
                  kernel_size,
                  stride=1,
                  dropout=0,
-                 residual=True):
+                 residual=True,
+                 stage=False):
         super().__init__()
 
         assert len(kernel_size) == 2
         assert kernel_size[0] % 2 == 1
         padding = ((kernel_size[0] - 1) // 2, 0)
-
+        self.stage = stage
         self.gcn = ConvTemporalGraphical(in_channels, out_channels,
                                          kernel_size[1])
 
