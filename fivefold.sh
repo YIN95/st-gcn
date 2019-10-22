@@ -20,3 +20,5 @@ nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/trai
 nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_2.yaml > nohup_multistage_2.out
 nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_3.yaml > nohup_multistage_3.out
 nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_4.yaml > nohup_multistage_4.out
+
+nohup python main.py recognition -c config/st_gcn.twostream/congreg8-marker/train_3.yaml > nohup_dis_3.out

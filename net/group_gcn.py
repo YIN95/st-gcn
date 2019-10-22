@@ -31,7 +31,7 @@ class Model(nn.Module):
         super().__init__()
 
         # load graph
-        in_channels = 16
+        in_channels = 18
         num_class = 2
         graph_args = {'layout': 'group', 'strategy': 'spatial'}
         self.graph = Graph(**graph_args)
